@@ -17,6 +17,9 @@ mkdir ${archivedir}
 "win-x86", "win-x64", "linux-x64", "osx-x64" | ForEach-Object -Process {
     $rid = $_
     cd "${tooldir}/${rid}"
+    dir "${tooldir}/${rid}/*" | ForEach-Object -Process {
+        cp "${tooldir}/${rid}/$($_.Name)" "${archivedir}/${rid}$($_.Extension)"
+    }
     Compress-Archive -Force -Path * -DestinationPath "${archivedir}/${rid}.zip"
 }
 
