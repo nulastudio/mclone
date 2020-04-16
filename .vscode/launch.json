@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch GO",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/src/main/mclone.go",
+            "env": {},
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "https://github.com/kelseyhightower/nocode.git"
+            ],
+            "dlvLoadConfig": {
+                "followPointers": true,
+                "maxVariableRecurse": 1,
+                "maxStringLen": 1024,
+                "maxArrayValues": 1000,
+                "maxStructFields": -1
+            }
+        }
+    ]
+}
