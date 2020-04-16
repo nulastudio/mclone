@@ -1,0 +1,11 @@
+.DS_Store
+__MACOSX
+
+vendor/
+
+log/**/*
+data/**/*
+cache/**/*
+!.gitkeep
+!.htaccess
+!data/database.example.db

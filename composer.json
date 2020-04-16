@@ -1,0 +1,18 @@
+{
+  "require": {
+    "psr/log": "^1.1",
+    "league/booboo": "^2.0",
+    "monolog/monolog": "^1.0",
+    "liesauer/simple-http-client": "^1.2",
+    "liesauer/get-middle-text": "^1.1",
+    "nulastudio/middleware": "^1.2@beta",
+    "catfan/medoo": "^1.7"
+  },
+  "autoload":{
+    "classmap":[
+      "system"
+    ]
+  },
+  "require-dev": {
+  }
+}
