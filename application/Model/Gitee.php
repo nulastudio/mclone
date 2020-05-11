@@ -164,6 +164,18 @@ class Gitee extends BaseModel
 
     private function cloneRepo($repo, $repoToken, &$errorMessage = null)
     {
+        $username = '';
+        $password = '';
+        $repo     = preg_replace_callback('/(?<=\/\/)(?<username>\w+):(?<password>\w+)@/', function ($matches) use (&$username, &$password) {
+            if (isset($matches['username']) && !empty($matches['username'])) {
+                $username = $matches['username'];
+            }
+            if (isset($matches['password']) && !empty($matches['password'])) {
+                $password = $matches['password'];
+            }
+            return '';
+        }, $repo);
+
         // // 访问主页
         // $indexResponse = SimpleHttpClient::quickGet("https://gitee.com/{$this->username}/dashboard/projects", $this->defaultHeader, $this->cookie);
 
@@ -202,7 +214,10 @@ class Gitee extends BaseModel
         // 只有message字段，地址可能有问题
         // 有private=true和message字段，repo不存在或者私有仓库
         // check_success=true和message字段，repo可导入
-        if (!$checkImportJSON['check_success']) {
+        // 有账号密码且private=true的话就当作私有仓库尝试导入
+        if ($username && $password && isset($checkImportJSON['private']) && $checkImportJSON['private']) {
+            // 尝试导入
+        } else if (!$checkImportJSON['check_success']) {
             $errorMessage = $checkImportJSON['message'];
             return false;
         }
@@ -223,8 +238,8 @@ class Gitee extends BaseModel
             'utf8'                    => '✓',
             'authenticity_token'      => $csrfToken,
             'project[import_url]'     => $repo,
-            'user_sync_code'          => '',
-            'password_sync_code'      => '',
+            'user_sync_code'          => $username,
+            'password_sync_code'      => $password,
             'project[name]'           => $repoHash,
             'project[namespace_path]' => $this->username,
             'project[path]'           => $repoHash,
