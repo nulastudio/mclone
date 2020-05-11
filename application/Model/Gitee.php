@@ -166,7 +166,7 @@ class Gitee extends BaseModel
     {
         $username = '';
         $password = '';
-        $repo     = preg_replace_callback('/(?<=\/\/)(?<username>\w+):(?<password>\w+)@/', function ($matches) use (&$username, &$password) {
+        $repo     = preg_replace_callback('/(?<=\/\/)(?<username>[\w\-]+):(?<password>[\w\-]+)@/', function ($matches) use (&$username, &$password) {
             if (isset($matches['username']) && !empty($matches['username'])) {
                 $username = $matches['username'];
             }
