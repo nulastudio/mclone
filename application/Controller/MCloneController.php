@@ -34,7 +34,31 @@ class MCloneController extends BaseController
         if (empty($account)) {
             return jsonData(2, '没有可用账号');
         }
-        $this->gitee = new Gitee($account['username'], $account['password'], $account['token'], $account['cookie']);
+        /**
+         * safeClone配置
+         */
+        $safeClone       = false;
+        $force           = false;
+        $safeCloneEnable = $this->app->getConfig('safeCloneEnable', false);
+        if ($safeCloneEnable) {
+            $forceSafeClone = $this->app->getConfig('forceSafeClone', false);
+            if ($forceSafeClone) {
+                $safeClone = true;
+                $force     = true;
+            } else {
+                $safeClone = $this->app->getConfig('safeCloneDefault', false);
+                $unsafe    = $this->post('unsafe');
+                $safe      = $this->post('safe');
+                if ($unsafe) {
+                    $safeClone = false;
+                }
+                if ($safe) {
+                    $safeClone = true;
+                }
+            }
+        }
+
+        $this->gitee = new Gitee($account['username'], $account['password'], $account['token'], $account['cookie'], $safeClone, $force);
         $repoToken   = $this->gitee->generateToken();
         if ($this->gitee->mclone($repo, $repoToken, $errorMessage)) {
             $cookie = $this->gitee->cookies();
@@ -44,7 +68,9 @@ class MCloneController extends BaseController
                     'id'   => (int) $account['id'],
                     'repo' => $repoToken,
                 ]),
-                'repo' => "https://gitee.com/{$account['username']}/{$repoToken}.git",
+                'safe'  => $safeClone,
+                'force' => $force,
+                'repo'  => "https://gitee.com/{$account['username']}/{$repoToken}.git",
             ]);
         } else {
             $this->userfriendlyErrorMessage($errorMessage);

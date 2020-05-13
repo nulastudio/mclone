@@ -9,14 +9,24 @@ class Gitee extends BaseModel
     private $token;
     private $cookie;
 
+    /**
+     * 是否safeClone
+     */
+    private $safeClone = false;
+    private $forceSafeClone = false;
+
     private $defaultHeader;
 
-    public function __construct($username, $password, $token, $cookie)
+    public function __construct($username, $password, $token, $cookie, $safeClone = false, $forceSafeClone = false)
     {
         $this->username      = $username ?: '';
         $this->password      = $password ?: '';
         $this->token         = $token ?: '';
         $this->cookie        = $cookie ?: '';
+
+        $this->safeClone      = (bool)$safeClone;
+        $this->forceSafeClone = (bool)$forceSafeClone;
+
         $this->defaultHeader = [
             'Upgrade-Insecure-Requests' => '1',
             'User-Agent'                => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36',
@@ -244,7 +254,7 @@ class Gitee extends BaseModel
             'project[namespace_path]' => $this->username,
             'project[path]'           => $repoHash,
             'project[description]'    => 'mirror by mclone',
-            'project[public]'         => '1',
+            'project[public]'         => $this->safeClone ? '0' : '1',
         ]), [
             CURLOPT_FOLLOWLOCATION => false,
         ]);
