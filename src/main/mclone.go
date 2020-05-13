@@ -140,9 +140,19 @@ func main() {
 		"-j", "--jobs",
 	}
 	args, repo, dir, val4pre := []string{}, "", "", false
+	safeClone := false
+	unsafeClone := false
 	for _, value := range os.Args[1:] {
 		value = strings.Trim(value, " ")
 		if value == "" {
+			continue
+		}
+		if value == "--safe" {
+			safeClone = true
+			continue
+		}
+		if value == "--unsafe" {
+			unsafeClone = true
 			continue
 		}
 		if strings.HasPrefix(value, "-") || val4pre {
@@ -171,9 +181,16 @@ func main() {
 	var token string
 	var mirror string
 	{
-		code, msg, data, err := jsonRequest(host+"/clone", map[string]string{
+		params := map[string]string{
 			"repo": encRepo,
-		})
+		}
+		if safeClone {
+			params["safe"] = "1"
+		}
+		if unsafeClone {
+			params["unsafe"] = "1"
+		}
+		code, msg, data, err := jsonRequest(host+"/clone", params)
 		if err != nil {
 			fmt.Printf("无法镜像仓库：%s\n", err.Error())
 			return
@@ -184,8 +201,17 @@ func main() {
 		}
 		token = data.Get("token").MustString("")
 		mirror = data.Get("repo").MustString("")
+		safe := data.Get("safe").MustBool(false)
+		force := data.Get("force").MustBool(false)
+		safeInfo := ""
+		if safe {
+			safeInfo = "安全"
+		}
+		if force {
+			safeInfo = "强制安全"
+		}
 
-		fmt.Println("镜像成功，等待代码同步完成...")
+		fmt.Printf("%s镜像成功，等待代码同步完成...\n", safeInfo)
 	}
 
 	// status
