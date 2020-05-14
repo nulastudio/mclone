@@ -34,6 +34,7 @@ class MCloneController extends BaseController
         if (empty($account)) {
             return jsonData(2, '没有可用账号');
         }
+        $allowPrivateRepo = $this->app->getConfig('allowPrivateRepo', false);
         /**
          * safeClone配置
          */
@@ -58,7 +59,7 @@ class MCloneController extends BaseController
             }
         }
 
-        $this->gitee = new Gitee($account['username'], $account['password'], $account['token'], $account['cookie'], $safeClone, $force);
+        $this->gitee = new Gitee($account['username'], $account['password'], $account['token'], $account['cookie'], $allowPrivateRepo, $safeClone, $force);
         $repoToken   = $this->gitee->generateToken();
         if ($this->gitee->mclone($repo, $repoToken, $errorMessage)) {
             $cookie = $this->gitee->cookies();

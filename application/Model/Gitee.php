@@ -9,6 +9,7 @@ class Gitee extends BaseModel
     private $token;
     private $cookie;
 
+    private $allowPrivateRepo = false;
     /**
      * 是否safeClone
      */
@@ -17,15 +18,16 @@ class Gitee extends BaseModel
 
     private $defaultHeader;
 
-    public function __construct($username, $password, $token, $cookie, $safeClone = false, $forceSafeClone = false)
+    public function __construct($username, $password, $token, $cookie, $allowPrivateRepo = false, $safeClone = false, $forceSafeClone = false)
     {
         $this->username      = $username ?: '';
         $this->password      = $password ?: '';
         $this->token         = $token ?: '';
         $this->cookie        = $cookie ?: '';
 
-        $this->safeClone      = (bool)$safeClone;
-        $this->forceSafeClone = (bool)$forceSafeClone;
+        $this->allowPrivateRepo = (bool)$allowPrivateRepo;
+        $this->safeClone        = (bool)$safeClone;
+        $this->forceSafeClone   = (bool)$forceSafeClone;
 
         $this->defaultHeader = [
             'Upgrade-Insecure-Requests' => '1',
@@ -185,6 +187,9 @@ class Gitee extends BaseModel
             }
             return '';
         }, $repo);
+        if (!$this->allowPrivateRepo) {
+            $username = $password = '';
+        }
 
         // // 访问主页
         // $indexResponse = SimpleHttpClient::quickGet("https://gitee.com/{$this->username}/dashboard/projects", $this->defaultHeader, $this->cookie);

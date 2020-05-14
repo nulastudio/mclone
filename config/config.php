@@ -5,6 +5,12 @@ return [
     'logFile' => LOG_PATH . '/' . date('Y-m-d') . '.log',
 
     /**
+     * 是否允许拉取私人仓库
+     * 
+     * 禁止后clone地址中的账号密码信息将被强制忽略
+     */
+    'allowPrivateRepo'  => false,
+    /**
      * 是否允许safeClone
      * 
      * 请注意：safeClone时，未经认证的客户端将无法拉取mclone镜像仓库
