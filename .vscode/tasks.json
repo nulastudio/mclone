@@ -6,11 +6,17 @@
         {
             "type": "shell",
             "label": "pack",
-            "command": "wsl",
+            "command": "pwsh",
             "args": [
-                "pwsh",
                 "./Build/build.ps1"
             ],
+            "windows": {
+                "command": "wsl",
+                "args": [
+                    "pwsh",
+                    "./Build/build.ps1"
+                ]
+            },
             "problemMatcher": []
         }
     ]
