@@ -4,6 +4,8 @@ use liesauer\SimpleHttpClient;
 
 class Gitee extends BaseModel
 {
+    private $description = 'mirror by mclone';
+
     private $username;
     private $password;
     private $token;
@@ -258,7 +260,7 @@ class Gitee extends BaseModel
             'project[name]'           => $repoHash,
             'project[namespace_path]' => $this->username,
             'project[path]'           => $repoHash,
-            'project[description]'    => 'mirror by mclone',
+            'project[description]'    => $this->description,
             'project[public]'         => $this->safeClone ? '0' : '1',
         ]), [
             CURLOPT_FOLLOWLOCATION => false,
@@ -321,6 +323,23 @@ class Gitee extends BaseModel
 
         $errorMessage = '镜像中';
         return -1;
+    }
+
+    public function listRepo(&$errorMessage = null) {
+        $response = SimpleHttpClient::quickGet("https://gitee.com/api/v5/user/repos?access_token={$this->token}&type=all&sort=full_name&page=1&per_page=50");
+
+        $json = json_decode($response['data'], true);
+        if (isset($json['message'])) {
+            $errorMessage = $json['message'];
+            return [];
+        }
+
+        $errorMessage = '';
+        return array_filter($json, function ($repo) {
+            // 超过两小时的repo
+            return $repo['description'] === $this->description &&
+                   time() - strtotime($repo['created_at']) >= 60 * 60 * 2;
+        });
     }
 
     private function deleteRepo($repoToken, &$errorMessage = null)

@@ -125,6 +125,19 @@ class MCloneController extends BaseController
         }
     }
 
+    public function clean()
+    {
+        $accounts = $this->account->getAccounts();
+        foreach ($accounts as $account) {
+            $gitee = new Gitee($account['username'], $account['password'], $account['token'], $account['cookie']);
+            $repos = $gitee->listRepo();
+    
+            foreach ($repos as $repo) {
+                $gitee->delete($repo['path']);
+            }
+        }
+    }
+
     private function userfriendlyErrorMessage(&$errorMessage)
     {
         $errorMessage = str_replace([

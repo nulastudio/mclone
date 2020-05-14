@@ -8,6 +8,7 @@ Router::get('/', function () {echo 'mclone is good';});
 Router::post('clone', 'MCloneController@mclone');
 Router::post('status', 'MCloneController@status');
 Router::post('drop', 'MCloneController@drop');
+Router::get('clean', 'MCloneController@clean');
 
 // 404处理
 // Router::error(function(){});
