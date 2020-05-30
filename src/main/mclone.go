@@ -19,6 +19,10 @@ import (
 
 var forever = 100 * 12 * 30 * 24 * time.Hour
 
+var rootDir = filepath.Dir(os.Args[0])
+
+var proxyFile = rootDir + "/proxy.conf"
+
 func runCommand(command string, arguments []string, pwd string, timeout time.Duration) <-chan error {
 	errchan := make(chan error, 1)
 
@@ -121,8 +125,21 @@ func main() {
 		}
 	}()
 
-	var host = "https://mclone.nulastudio.org"
-	// var host = "http://localhost:8080"
+	// var host = "https://mclone.nulastudio.org"
+	var host = "http://localhost:8080"
+
+	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
+		proxySubCommand()
+		return
+	}
+
+	_, err := os.Stat(proxyFile)
+
+	if err == nil || os.IsExist(err) {
+		if proxy, err := ioutil.ReadFile(proxyFile); err == nil {
+			host = strings.TrimSpace(string(proxy))
+		}
+	}
 
 	// parse
 	valueArgs := []string{
@@ -142,6 +159,7 @@ func main() {
 	args, repo, dir, val4pre := []string{}, "", "", false
 	safeClone := false
 	unsafeClone := false
+	settingProxy := false
 	for _, value := range os.Args[1:] {
 		value = strings.Trim(value, " ")
 		if value == "" {
@@ -153,6 +171,15 @@ func main() {
 		}
 		if value == "--unsafe" {
 			unsafeClone = true
+			continue
+		}
+		if value == "--proxy" {
+			settingProxy = true
+			continue
+		}
+		if settingProxy {
+			host = value
+			settingProxy = false
 			continue
 		}
 		if strings.HasPrefix(value, "-") || val4pre {
@@ -338,5 +365,33 @@ func main() {
 
 	if !quit && success {
 		fmt.Println("mclone成功，enjoy it！")
+	}
+}
+
+func proxySubCommand() {
+	subcommand := ""
+	if len(os.Args) >= 3 {
+		subcommand = os.Args[2]
+	}
+	if subcommand == "set" {
+		if len(os.Args) >= 4 {
+			proxy := os.Args[3]
+			if err := ioutil.WriteFile(proxyFile, []byte(proxy), 0666); err == nil {
+				fmt.Println("set proxy succeeded.")
+			} else {
+				fmt.Println("set proxy failed.")
+			}
+		}
+	} else if subcommand == "del" {
+		if err := os.Remove(proxyFile); err == nil {
+			fmt.Println("delete proxy succeeded.")
+		} else {
+			fmt.Println("delete proxy failed.")
+		}
+	} else {
+		fmt.Println("set <proxy>")
+		fmt.Println("    set and store mclone proxy server.")
+		fmt.Println("del")
+		fmt.Println("    delete stored mclone proxy server.")
 	}
 }
