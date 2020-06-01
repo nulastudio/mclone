@@ -96,6 +96,9 @@ git mclone proxy set https://mclone.my.com
 
 ### `proxy del`
 删除mclone的代理服务器地址，删除后将使用默认的`mclone.nulastudio.org`服务器。
+```shell
+git mclone proxy del
+```
 
 ## FAQ
 
