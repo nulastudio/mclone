@@ -125,8 +125,8 @@ func main() {
 		}
 	}()
 
-	// var host = "https://mclone.nulastudio.org"
-	var host = "http://localhost:8080"
+	var host = "https://mclone.nulastudio.org"
+	// var host = "http://localhost:8080"
 
 	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
 		proxySubCommand()
