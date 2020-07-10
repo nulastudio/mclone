@@ -127,6 +127,7 @@ func main() {
 
 	var host = "https://mclone.nulastudio.org"
 	// var host = "http://localhost:8080"
+	var cnpmHost = "github.com.cnpmjs.org"
 
 	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
 		proxySubCommand()
@@ -160,6 +161,7 @@ func main() {
 	safeClone := false
 	unsafeClone := false
 	settingProxy := false
+	use_cnpm := false
 	for _, value := range os.Args[1:] {
 		value = strings.Trim(value, " ")
 		if value == "" {
@@ -175,6 +177,10 @@ func main() {
 		}
 		if value == "--proxy" {
 			settingProxy = true
+			continue
+		}
+		if value == "--cnpm" {
+			use_cnpm = true
 			continue
 		}
 		if settingProxy {
@@ -202,12 +208,12 @@ func main() {
 		return
 	}
 
-	encRepo := base64.StdEncoding.EncodeToString([]byte(repo))
-
 	// mclone
 	var token string
 	var mirror string
-	{
+	if !use_cnpm {
+		encRepo := base64.StdEncoding.EncodeToString([]byte(repo))
+
 		params := map[string]string{
 			"repo": encRepo,
 		}
@@ -239,6 +245,8 @@ func main() {
 		}
 
 		fmt.Printf("%s镜像成功，等待代码同步完成...\n", safeInfo)
+	} else {
+		fmt.Println("使用cnpm代理...")
 	}
 
 	// status
@@ -251,7 +259,7 @@ func main() {
 	timestart := time.Now()
 
 	var success bool
-	{
+	if !use_cnpm {
 		allTimes := 5
 		errTimes := 0
 		fmt.Println("检查镜像仓库状态中...")
@@ -314,11 +322,24 @@ func main() {
 			}
 			timenow = time.Now()
 		}
+	} else {
+		success = true
 	}
 
 	// clone
 	if !quit && success {
-		fmt.Println("同步成功，等待代码拉取完成...")
+		if !use_cnpm {
+			fmt.Println("同步成功，等待代码拉取完成...")
+		} else {
+			// cnpm doesn't support SSH, replace to HTTPS
+			sshStr := "git@github.com:"
+			mirror = repo
+			if strings.Contains(mirror, sshStr) {
+				fmt.Println("cnpm不支持SSH方式，更换至HTTPS中...")
+				mirror = strings.Replace(mirror, sshStr, "https://github.com/", 1)
+			}
+			mirror = strings.Replace(mirror, "github.com", cnpmHost, 1)
+		}
 
 		args = append(args, mirror)
 		if dir == "" {
@@ -349,7 +370,7 @@ func main() {
 	}
 
 	// drop
-	{
+	if !use_cnpm {
 		code, msg, _, err := jsonRequest(host+"/drop", map[string]string{
 			"token": token,
 		})
