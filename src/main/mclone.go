@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -21,6 +23,14 @@ var forever = 100 * 12 * 30 * 24 * time.Hour
 
 var rootDir = filepath.Dir(os.Args[0])
 
+var mirrors = map[string]string{
+	"cnpm":     "github.com.cnpmjs.org",
+	"gitclone": "gitclone.com",
+}
+
+var mirrorName = ""
+var mirrorHost = ""
+var mirrorFile = rootDir + "/mirror.conf"
 var proxyFile = rootDir + "/proxy.conf"
 
 func runCommand(command string, arguments []string, pwd string, timeout time.Duration) <-chan error {
@@ -127,18 +137,38 @@ func main() {
 
 	var host = "https://mclone.nulastudio.org"
 	// var host = "http://localhost:8080"
-	var cnpmHost = "github.com.cnpmjs.org"
+
+	if len(os.Args) >= 2 && os.Args[1] == "mirror" {
+		mirrorSubCommand()
+		return
+	}
 
 	if len(os.Args) >= 2 && os.Args[1] == "proxy" {
 		proxySubCommand()
 		return
 	}
 
-	_, err := os.Stat(proxyFile)
+	{
+		_, err := os.Stat(mirrorFile)
 
-	if err == nil || os.IsExist(err) {
-		if proxy, err := ioutil.ReadFile(proxyFile); err == nil {
-			host = strings.TrimSpace(string(proxy))
+		if err == nil || os.IsExist(err) {
+			if mirror, err := ioutil.ReadFile(mirrorFile); err == nil {
+				mName := strings.TrimSpace(string(mirror))
+				if mHost, ok := mirrors[mName]; ok {
+					mirrorName = mName
+					mirrorHost = mHost
+				}
+			}
+		}
+	}
+
+	{
+		_, err := os.Stat(proxyFile)
+
+		if err == nil || os.IsExist(err) {
+			if proxy, err := ioutil.ReadFile(proxyFile); err == nil {
+				host = strings.TrimSpace(string(proxy))
+			}
 		}
 	}
 
@@ -161,7 +191,8 @@ func main() {
 	safeClone := false
 	unsafeClone := false
 	settingProxy := false
-	use_cnpm := false
+	settingMirror := false
+	useMirror := mirrorHost != ""
 	for _, value := range os.Args[1:] {
 		value = strings.Trim(value, " ")
 		if value == "" {
@@ -179,13 +210,24 @@ func main() {
 			settingProxy = true
 			continue
 		}
-		if value == "--cnpm" {
-			use_cnpm = true
+		if value == "--mirror" {
+			settingMirror = true
 			continue
 		}
 		if settingProxy {
 			host = value
 			settingProxy = false
+			continue
+		}
+		if settingMirror {
+			if ok, mHost := trySetMirror(value); ok {
+				mirrorName = value
+				mirrorHost = mHost
+				useMirror = true
+			} else {
+				useMirror = false
+			}
+			settingMirror = false
 			continue
 		}
 		if strings.HasPrefix(value, "-") || val4pre {
@@ -211,7 +253,7 @@ func main() {
 	// mclone
 	var token string
 	var mirror string
-	if !use_cnpm {
+	if !useMirror {
 		encRepo := base64.StdEncoding.EncodeToString([]byte(repo))
 
 		params := map[string]string{
@@ -245,8 +287,6 @@ func main() {
 		}
 
 		fmt.Printf("%s镜像成功，等待代码同步完成...\n", safeInfo)
-	} else {
-		fmt.Println("使用cnpm代理...")
 	}
 
 	// status
@@ -259,7 +299,7 @@ func main() {
 	timestart := time.Now()
 
 	var success bool
-	if !use_cnpm {
+	if !useMirror {
 		allTimes := 5
 		errTimes := 0
 		fmt.Println("检查镜像仓库状态中...")
@@ -328,17 +368,25 @@ func main() {
 
 	// clone
 	if !quit && success {
-		if !use_cnpm {
+		if !useMirror {
 			fmt.Println("同步成功，等待代码拉取完成...")
 		} else {
-			// cnpm doesn't support SSH, replace to HTTPS
-			sshStr := "git@github.com:"
+			// third-part mirror doesn't support SSH, replace to HTTPS
 			mirror = repo
-			if strings.Contains(mirror, sshStr) {
-				fmt.Println("cnpm不支持SSH方式，更换至HTTPS中...")
-				mirror = strings.Replace(mirror, sshStr, "https://github.com/", 1)
+			fmt.Printf("使用第三方镜像拉取仓库中：%s\n", mirrorName)
+			isSSH := !strings.HasPrefix(mirror, "https") && !strings.HasPrefix(mirror, "http")
+			if isSSH {
+				fmt.Println("第三方镜像方式不支持SSH方式，更换至HTTPS中...")
+				mirror = strings.Replace(mirror, "git@github.com:", "https://github.com/", 1)
 			}
-			mirror = strings.Replace(mirror, "github.com", cnpmHost, 1)
+			switch mirrorName {
+			case "cnpm":
+				mirror = strings.Replace(mirror, "github.com", mirrorHost, 1)
+				break
+			case "gitclone":
+				mirror = strings.Replace(mirror, "github.com", mirrorHost+"/github.com", 1)
+				break
+			}
 		}
 
 		args = append(args, mirror)
@@ -370,7 +418,7 @@ func main() {
 	}
 
 	// drop
-	if !use_cnpm {
+	if !useMirror {
 		code, msg, _, err := jsonRequest(host+"/drop", map[string]string{
 			"token": token,
 		})
@@ -386,6 +434,52 @@ func main() {
 
 	if !quit && success {
 		fmt.Println("mclone成功，enjoy it！")
+	}
+}
+
+func mirrorSubCommand() {
+	subcommand := ""
+	if len(os.Args) >= 3 {
+		subcommand = os.Args[2]
+	}
+	if subcommand == "list" {
+		var names []string
+		for name := range mirrors {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		length := longest(names)
+		fmt.Println("Mirrors:")
+		for _, name := range names {
+			fmt.Printf("%-"+strconv.Itoa(length)+"s    %s\n", name, mirrors[name])
+		}
+	} else if subcommand == "set" {
+		if len(os.Args) >= 4 {
+			mName := os.Args[3]
+			ok, _ := trySetMirror(mName)
+			if ok {
+				err := ioutil.WriteFile(mirrorFile, []byte(mName), 0666)
+				ok = err == nil
+			}
+			if ok {
+				fmt.Println("set mirror succeeded.")
+			} else {
+				fmt.Println("set mirror failed.")
+			}
+		}
+	} else if subcommand == "del" {
+		if err := os.Remove(mirrorFile); err == nil {
+			fmt.Println("delete proxy succeeded.")
+		} else {
+			fmt.Println("delete proxy failed.")
+		}
+	} else {
+		fmt.Println("list")
+		fmt.Println("    list all supported third-part mirrors.")
+		fmt.Println("set <mirror>")
+		fmt.Println("    set and store mclone third-part mirror.")
+		fmt.Println("del")
+		fmt.Println("    delete stored mclone third-part mirror.")
 	}
 }
 
@@ -415,4 +509,32 @@ func proxySubCommand() {
 		fmt.Println("del")
 		fmt.Println("    delete stored mclone proxy server.")
 	}
+}
+
+func trySetMirror(mName string) (bool, string) {
+	var mHost = ""
+	var ok = false
+	if mHost, ok = mirrors[mName]; ok {
+		mirrorHost = mHost
+	} else {
+		fmt.Printf("unknown mirror %s.\n", mName)
+	}
+	return ok, mHost
+}
+
+func longest(a []string) int {
+	var l []string
+	if len(a) > 0 {
+		l = append(l, a[0])
+		a = a[1:]
+	}
+	for _, s := range a {
+		if len(l[0]) <= len(s) {
+			if len(l[0]) < len(s) {
+				l = l[:0]
+			}
+			l = append(l, s)
+		}
+	}
+	return len(append([]string(nil), l...)[0])
 }
