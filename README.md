@@ -23,21 +23,21 @@
 ### Windows
 cmd
 ```shell
-powershell Invoke-Expression (New-Object Net.WebClient).DownloadString(\"https://gitee.com/liesauer/mclone/raw/v1.4.0/script/install.ps1\")
+powershell Invoke-Expression (New-Object Net.WebClient).DownloadString(\"https://gitee.com/liesauer/mclone/raw/v1.5.0/script/install.ps1\")
 ```
 powershell
 ```shell
-Invoke-Expression (New-Object Net.WebClient).DownloadString("https://gitee.com/liesauer/mclone/raw/v1.4.0/script/install.ps1")
+Invoke-Expression (New-Object Net.WebClient).DownloadString("https://gitee.com/liesauer/mclone/raw/v1.5.0/script/install.ps1")
 ```
 
 ### Linux/MacOS
 curl
 ```shell
-sudo bash -c "$(curl -fsSL https://gitee.com/liesauer/mclone/raw/v1.4.0/script/install.sh)"
+sudo bash -c "$(curl -fsSL https://gitee.com/liesauer/mclone/raw/v1.5.0/script/install.sh)"
 ```
 wget
 ```shell
-sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.4.0/script/install.sh -O -)"
+sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.5.0/script/install.sh -O -)"
 ```
 
 ## 卸载
@@ -45,21 +45,21 @@ sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.4.0/script/install
 ### Windows
 cmd
 ```shell
-powershell Invoke-Expression (New-Object Net.WebClient).DownloadString(\"https://gitee.com/liesauer/mclone/raw/v1.4.0/script/uninstall.ps1\")
+powershell Invoke-Expression (New-Object Net.WebClient).DownloadString(\"https://gitee.com/liesauer/mclone/raw/v1.5.0/script/uninstall.ps1\")
 ```
 powershell
 ```shell
-Invoke-Expression (New-Object Net.WebClient).DownloadString("https://gitee.com/liesauer/mclone/raw/v1.4.0/script/uninstall.ps1")
+Invoke-Expression (New-Object Net.WebClient).DownloadString("https://gitee.com/liesauer/mclone/raw/v1.5.0/script/uninstall.ps1")
 ```
 
 ### Linux/MacOS
 curl
 ```shell
-sudo bash -c "$(curl -fsSL https://gitee.com/liesauer/mclone/raw/v1.4.0/script/uninstall.sh)"
+sudo bash -c "$(curl -fsSL https://gitee.com/liesauer/mclone/raw/v1.5.0/script/uninstall.sh)"
 ```
 wget
 ```shell
-sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.4.0/script/uninstall.sh -O -)"
+sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.5.0/script/uninstall.sh -O -)"
 ```
 
 ## Mirror
@@ -99,6 +99,23 @@ git mclone mirror set cnpm
 删除mclone的第三方代理。
 ```shell
 git mclone mirror del
+```
+
+## 保留镜像仓库地址
+将镜像仓库保存至名叫`mirror`的`remote`里，由于mclone的特殊性，仅使用Mirror时才能保留镜像仓库。
+
+### `--save`
+```shell
+git mclone --save https://github.com/username/repo.git
+```
+
+保留后的`remote`
+```
+E:\Projects\mclone\mclone\nocode>git remote -v
+mirror  https://gitclone.com/github.com/kelseyhightower/nocode.git (fetch)
+mirror  https://gitclone.com/github.com/kelseyhightower/nocode.git (push)
+origin  git@github.com:kelseyhightower/nocode.git (fetch)
+origin  git@github.com:kelseyhightower/nocode.git (push)
 ```
 
 ## Safe Clone

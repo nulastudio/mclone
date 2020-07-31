@@ -193,6 +193,7 @@ func main() {
 	settingProxy := false
 	settingMirror := false
 	useMirror := mirrorHost != ""
+	saveMirror := false
 	for _, value := range os.Args[1:] {
 		value = strings.Trim(value, " ")
 		if value == "" {
@@ -212,6 +213,10 @@ func main() {
 		}
 		if value == "--mirror" {
 			settingMirror = true
+			continue
+		}
+		if value == "--save" {
+			saveMirror = true
 			continue
 		}
 		if settingProxy {
@@ -254,6 +259,10 @@ func main() {
 	var token string
 	var mirror string
 	if !useMirror {
+		if saveMirror {
+			saveMirror = false
+			fmt.Println("--save无效：仅使用第三方代理时支持保留镜像仓库地址")
+		}
 		encRepo := base64.StdEncoding.EncodeToString([]byte(repo))
 
 		params := map[string]string{
@@ -409,9 +418,14 @@ func main() {
 			}
 		}
 		if !quit {
-			cmd := runCommand("git", []string{"remote", "set-url", "origin", repo}, repopwd, forever)
-			err := <-cmd
-			if !quit && err != nil {
+			cmd1 := runCommand("git", []string{"remote", "set-url", "origin", repo}, repopwd, forever)
+			err1 := <-cmd1
+			var err2 error = nil
+			if useMirror && saveMirror {
+				cmd2 := runCommand("git", []string{"remote", "add", "mirror", mirror}, repopwd, forever)
+				err2 = <-cmd2
+			}
+			if !quit && err1 != nil && err2 != nil {
 				success = false
 			}
 		}
@@ -432,8 +446,12 @@ func main() {
 		}
 	}
 
-	if !quit && success {
-		fmt.Println("mclone成功，enjoy it！")
+	if !quit {
+		if success {
+			fmt.Println("mclone成功，enjoy it！")
+		} else {
+			fmt.Println("mclone失败！")
+		}
 	}
 }
 
