@@ -65,7 +65,7 @@ sudo bash -c "$(wget https://gitee.com/liesauer/mclone/raw/v1.5.0/script/uninsta
 ## Mirror
 使用第三方的代理直接拉取代码
 
-**注意：`Mirror`不支持以SSH的方式拉取代码**
+**注意：`Mirror`不支持以SSH的方式拉取代码，`mlcone`会自动将SSH替换为HTTPS**
 
 **`Mirror`指第三方代理，`Proxy Server`指自部署的mclone后台。当同时设置`Mirror`和`Proxy Server`时，优先使用`Mirror`的方式拉取代码。**
 
