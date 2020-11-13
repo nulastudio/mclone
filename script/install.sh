@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="v1.5.0"
+version="v1.5.1"
 url="https://liesauer.coding.net/p/mclone/d/mclone/git/raw/${version}"
 name=""
 path="/usr/local/bin"

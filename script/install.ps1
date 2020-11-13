@@ -1,4 +1,4 @@
-$Version = "v1.5.0"
+$Version = "v1.5.1"
 $Url = "https://liesauer.coding.net/p/mclone/d/mclone/git/raw/${Version}/win-x86.exe"
 $Path = "${Env:APPDATA}\mclone"
 $Save = "${Path}\mclone.exe"
