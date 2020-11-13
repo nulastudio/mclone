@@ -25,6 +25,7 @@ var rootDir = filepath.Dir(os.Args[0])
 
 var mirrors = map[string]string{
 	"cnpm":     "github.com.cnpmjs.org",
+	"fastgit":  "hub.fastgit.org",
 	"gitclone": "gitclone.com",
 }
 
@@ -390,6 +391,9 @@ func main() {
 			}
 			switch mirrorName {
 			case "cnpm":
+				mirror = strings.Replace(mirror, "github.com", mirrorHost, 1)
+				break
+			case "fastgit":
 				mirror = strings.Replace(mirror, "github.com", mirrorHost, 1)
 				break
 			case "gitclone":
