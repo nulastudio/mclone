@@ -12,7 +12,7 @@
 ![git mclone](git_mclone.gif)
 
 ## 限制
-1. 仓库大小：`<500M`
+1. 仓库大小（仅Proxy）：`<500M`
 2. LFS支持：`未知`
 
 ## 使用
