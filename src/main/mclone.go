@@ -27,6 +27,7 @@ var mirrors = map[string]string{
 	"cnpm":     "github.com.cnpmjs.org",
 	"fastgit":  "hub.fastgit.org",
 	"gitclone": "gitclone.com",
+	"ghproxy":  "ghproxy.com",
 }
 
 var mirrorName = ""
@@ -398,6 +399,9 @@ func main() {
 				break
 			case "gitclone":
 				mirror = strings.Replace(mirror, "github.com", mirrorHost+"/github.com", 1)
+				break
+			case "ghproxy":
+				mirror = strings.Replace(mirror, "github.com", mirrorHost+"/https://github.com", 1)
 				break
 			}
 		}
